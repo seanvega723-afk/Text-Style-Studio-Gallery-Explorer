@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Text Style Studio & Gallery Explorer</title>
+  <style>
+    :root { --accent: #6a1b9a; --border: #d0d0d8; --bg: #f6f5fa; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: #222; line-height: 1.5; }
+    header { background: var(--accent); color: #fff; padding: 1rem; text-align: center; }
+    main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+    section { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+    h1, h2, h3 { margin-top: 0; }
+    label { margin-right: .5rem; }
+    input[type="text"] { width: 100%; max-width: 480px; padding: .5rem; font-size: 1rem; }
+    button { padding: .5rem .9rem; font-size: 1rem; border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 4px; cursor: pointer; margin: .25rem .25rem .25rem 0; }
+    button.secondary { background: #fff; color: var(--accent); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    :focus-visible { outline: 3px solid #ff9800; outline-offset: 2px; }
+    fieldset { border: 1px solid var(--border); margin: .5rem 0; display: inline-block; vertical-align: top; }
+    .row { margin: .5rem 0; }
+    .status { min-height: 1.5em; font-weight: bold; color: #b00020; }
+    .status.ok { color: #1b6e2d; }
+    .counter { font-size: .85rem; color: #555; }
+    #outputArea { min-height: 80px; padding: .5rem; border: 1px dashed var(--border); margin-top: .5rem; }
+    #outputMessage { margin: 0; padding: .75rem; border-radius: 4px; overflow-wrap: anywhere; }
+    .timestamp { font-size: .8rem; color: #555; margin: .25rem 0 0; }
+    /* Theme classes applied to the output paragraph */
+    .bg-white { background: #fff; } .bg-purple { background: #6a1b9a; }
+    .bg-orange { background: #ff9800; } .bg-lightblue { background: #add8e6; }
+    .fc-black { color: #000; } .fc-blue { color: #0000ff; }
+    .fc-white { color: #fff; } .fc-darkred { color: #8b0000; }
+    .is-bold { font-weight: bold; } .is-italic { font-style: italic; }
+    /* Gallery */
+    .gallery-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+    .gallery figure { margin: 0; }
+    .gallery img { width: 100%; height: 130px; object-fit: cover; border: 4px solid transparent; border-radius: 6px; cursor: pointer; display: block; }
+    .gallery img.active { border-color: #ff9800; }
+    .gallery img.selected { border-color: #1b6e2d; box-shadow: 0 0 0 2px #1b6e2d; }
+    .gallery figcaption { font-size: .85rem; text-align: center; }
+    #previewPanel { border: 1px solid var(--border); border-radius: 6px; padding: 1rem; min-height: 280px; }
+    #previewPanel img { width: 100%; max-height: 260px; object-fit: cover; border-radius: 6px; }
+    @media (max-width: 700px) { .gallery-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Text Style Studio &amp; Gallery Explorer</h1>
+  </header>
+
+  <main>
+    <!-- PART 1: Text Style Studio -->
+    <section id="studio">
+      <h2>Text Style Studio</h2>
+      <form id="messageForm" novalidate>
+        <div class="row">
+          <label for="messageInput">Your message</label><br>
+          <input type="text" id="messageInput" maxlength="100" autocomplete="off">
+          <div class="counter" id="charCounter" aria-live="polite">0 / 100 characters</div>
+        </div>
+        <button type="submit" id="displayBtn">Display Message</button>
+        <button type="button" id="clearBtn" class="secondary">Clear</button>
+      </form>
+      <p class="status" id="statusMessage" role="status" aria-live="polite"></p>
+      <div id="outputArea" aria-label="Message output"></div>
+
+      <!-- PART 2: Font Controls -->
+      <h3>Font Controls</h3>
+      <button type="button" id="increaseBtn">Increase Font Size</button>
+      <button type="button" id="decreaseBtn">Decrease Font Size</button>
+      <span>Current font size: <strong id="fontSizeLabel">20px</strong></span>
+
+      <!-- PART 3: Style Controls -->
+      <h3>Style Controls</h3>
+      <fieldset>
+        <legend>Background color</legend>
+        <label><input type="radio" name="bgColor" value="white" checked> White</label>
+        <label><input type="radio" name="bgColor" value="purple"> Purple</label>
+        <label><input type="radio" name="bgColor" value="orange"> Orange</label>
+        <label><input type="radio" name="bgColor" value="lightblue"> Light Blue</label>
+      </fieldset>
+      <fieldset>
+        <legend>Font color</legend>
+        <label><input type="radio" name="fontColor" value="black" checked> Black</label>
+        <label><input type="radio" name="fontColor" value="blue"> Blue</label>
+        <label><input type="radio" name="fontColor" value="white"> White</label>
+        <label><input type="radio" name="fontColor" value="darkred"> Dark Red</label>
+      </fieldset>
+      <div class="row">
+        <label><input type="checkbox" id="boldToggle"> Bold</label>
+        <label><input type="checkbox" id="italicToggle"> Italic</label>
+        <label for="fontFamilySelect">Font family</label>
+        <select id="fontFamilySelect">
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+        </select>
+      </div>
+      <button type="button" id="resetStyleBtn" class="secondary">Reset Style</button>
+    </section>
+
+    <!-- PART 4: Gallery Explorer -->
+    <section id="gallery-section">
+      <h2>Gallery Explorer</h2>
+      <div class="gallery-layout">
+        <div>
+          <div class="gallery" id="gallery">
+            <figure>
+              <img src="https://picsum.photos/id/1018/800/600" alt="Mountain lake surrounded by green hills" data-title="Mountain Lake" tabindex="0">
+              <figcaption>Mountain Lake</figcaption>
+            </figure>
+            <figure>
+              <img src="https://picsum.photos/id/1015/800/600" alt="River winding through a rocky valley" data-title="River Valley" tabindex="0">
+              <figcaption>River Valley</figcaption>
+            </figure>
+            <figure>
+              <img src="https://picsum.photos/id/1039/800/600" alt="Waterfall pouring over mossy rocks" data-title="Forest Waterfall" tabindex="0">
+              <figcaption>Forest Waterfall</figcaption>
+            </figure>
+            <figure>
+              <img src="https://picsum.photos/id/1043/800/600" alt="Calm sea under a cloudy sunset sky" data-title="Sunset Sea" tabindex="0">
+              <figcaption>Sunset Sea</figcaption>
+            </figure>
+          </div>
+          <div class="row">
+            <button type="button" id="prevBtn" aria-label="Previous image">&larr; Previous</button>
+            <button type="button" id="nextBtn" aria-label="Next image">Next &rarr;</button>
+            <button type="button" id="resetGalleryBtn" class="secondary">Reset Gallery</button>
+          </div>
+        </div>
+        <div id="previewPanel" aria-live="polite">
+          <h3>Image Preview</h3>
+          <div id="previewContent"><p>Hover over or focus on an image to see its details.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ---------- Constants and state ----------
+    const DEFAULT_SIZE = 20, MIN_SIZE = 12, MAX_SIZE = 48, STEP = 2, MAX_CHARS = 100;
+    const STORAGE_KEY = 'textStudioState';
+    const INSTRUCTION_HTML = '<p>Hover over or focus on an image to see its details.</p>';
+    // Colors used to calculate contrast (hex values match the CSS classes)
+    const BG_HEX = { white: '#ffffff', purple: '#6a1b9a', orange: '#ff9800', lightblue: '#add8e6' };
+    const FONT_HEX = { black: '#000000', blue: '#0000ff', white: '#ffffff', darkred: '#8b0000' };
+
+    const state = { message: '', fontSize: DEFAULT_SIZE, bg: 'white', font: 'black',
+                    bold: false, italic: false, family: 'Arial, sans-serif', hasOutput: false };
+
+    // ---------- Element references ----------
+    const form = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const charCounter = document.getElementById('charCounter');
+    const statusMessage = document.getElementById('statusMessage');
+    const outputArea = document.getElementById('outputArea');
+    const clearBtn = document.getElementById('clearBtn');
+    const increaseBtn = document.getElementById('increaseBtn');
+    const decreaseBtn = document.getElementById('decreaseBtn');
+    const fontSizeLabel = document.getElementById('fontSizeLabel');
+    const resetStyleBtn = document.getElementById('resetStyleBtn');
+    const boldToggle = document.getElementById('boldToggle');
+    const italicToggle = document.getElementById('italicToggle');
+    const fontFamilySelect = document.getElementById('fontFamilySelect');
+    const bgRadios = document.querySelectorAll('input[name="bgColor"]');
+    const fontRadios = document.querySelectorAll('input[name="fontColor"]');
+    const galleryImages = Array.from(document.querySelectorAll('#gallery img'));
+    const previewContent = document.getElementById('previewContent');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const resetGalleryBtn = document.getElementById('resetGalleryBtn');
+    let activeIndex = -1, selectedIndex = -1;
+
+    // ---------- Status helper ----------
+    // Shows feedback; isOk switches between error (red) and success (green) styling.
+    function setStatus(text, isOk = false) {
+      statusMessage.textContent = text;
+      statusMessage.classList.toggle('ok', isOk);
+    }
+
+    // ---------- Contrast checking ----------
+    // Converts a hex color to relative luminance (WCAG formula).
+    function luminance(hex) {
+      const [r, g, b] = [1, 3, 5].map(i => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+    // Returns true when the selected colors have a contrast ratio below 4.5.
+    function isLowContrast(bgKey, fontKey) {
+      const a = luminance(BG_HEX[bgKey]), b = luminance(FONT_HEX[fontKey]);
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) < 4.5;
+    }
+
+    // ---------- Rendering ----------
+    // Applies the current state to the output paragraph and controls using CSS classes.
+    function applyStyles() {
+      fontSizeLabel.textContent = state.fontSize + 'px';
+      decreaseBtn.disabled = state.fontSize <= MIN_SIZE;
+      increaseBtn.disabled = state.fontSize >= MAX_SIZE;
+      const p = document.getElementById('outputMessage');
+      if (p) {
+        p.className = `bg-${state.bg} fc-${state.font}` +
+          (state.bold ? ' is-bold' : '') + (state.italic ? ' is-italic' : '');
+        p.style.fontSize = state.fontSize + 'px';
+        p.style.fontFamily = state.family;
+      }
+    }
+
+    // Warns when the chosen colors are hard to read together.
+    function checkContrastWarning() {
+      if (isLowContrast(state.bg, state.font)) {
+        setStatus('Warning: This color combination may be difficult to read.');
+      } else if (statusMessage.textContent.startsWith('Warning')) {
+        setStatus('');
+      }
+    }
+
+    // Builds the output paragraph (plus timestamp) for the submitted message.
+    function renderMessage(text, showTime) {
+      outputArea.innerHTML = '';
+      const p = document.createElement('p');
+      p.id = 'outputMessage';
+      p.textContent = text;
+      outputArea.appendChild(p);
+      if (showTime) {
+        const t = document.createElement('p');
+        t.className = 'timestamp';
+        t.textContent = 'Displayed: ' + new Date().toLocaleString();
+        outputArea.appendChild(t);
+      }
+      state.hasOutput = true;
+      applyStyles();
+    }
+
+    // ---------- Text Style Studio handlers ----------
+    // Validates and displays the trimmed message.
+    function displayMessage() {
+      const text = messageInput.value.trim();
+      if (!text) {
+        setStatus('Please enter a message before displaying it.');
+        return;
+      }
+      state.message = text;
+      renderMessage(text, true);
+      setStatus('Message displayed.', true);
+      checkContrastWarning();
+      saveState();
+    }
+
+    // Clears the input, output, status, and restores default styles.
+    function clearAll() {
+      messageInput.value = '';
+      outputArea.innerHTML = '';
+      state.message = '';
+      state.hasOutput = false;
+      updateCounter();
+      resetStyle();
+      setStatus('');
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    // Updates the live character counter.
+    function updateCounter() {
+      charCounter.textContent = `${messageInput.value.length} / ${MAX_CHARS} characters`;
+    }
+
+    // Changes the font size by delta, enforcing the min/max limits.
+    function changeFontSize(delta) {
+      const next = state.fontSize + delta;
+      if (next < MIN_SIZE) { setStatus('Minimum font size is 12px.'); return; }
+      if (next > MAX_SIZE) { setStatus('Maximum font size is 48px.'); return; }
+      state.fontSize = next;
+      setStatus('');
+      applyStyles();
+      checkContrastWarning();
+      saveState();
+    }
+
+    // Restores size, colors, radio buttons, and extra style controls to defaults.
+    function resetStyle() {
+      Object.assign(state, { fontSize: DEFAULT_SIZE, bg: 'white', font: 'black',
+                             bold: false, italic: false, family: 'Arial, sans-serif' });
+      document.querySelector('input[name="bgColor"][value="white"]').checked = true;
+      document.querySelector('input[name="fontColor"][value="black"]').checked = true;
+      boldToggle.checked = false;
+      italicToggle.checked = false;
+      fontFamilySelect.value = state.family;
+      setStatus('');
+      applyStyles();
+      saveState();
+    }
+
+    // ---------- localStorage ----------
+    // Saves the message and style selections.
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+    }
+    // Restores saved message and styles when the page loads.
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!saved) return;
+        Object.assign(state, saved);
+        messageInput.value = state.message || '';
+        document.querySelector(`input[name="bgColor"][value="${state.bg}"]`).checked = true;
+        document.querySelector(`input[name="fontColor"][value="${state.font}"]`).checked = true;
+        boldToggle.checked = state.bold;
+        italicToggle.checked = state.italic;
+        fontFamilySelect.value = state.family;
+        if (state.message) renderMessage(state.message, false);
+        updateCounter();
+      } catch (e) { /* ignore corrupt data */ }
+    }
+
+    // ---------- Gallery ----------
+    // Shows the image details in the preview panel and marks it active.
+    function showPreview(index) {
+      activeIndex = index;
+      const img = galleryImages[index];
+      galleryImages.forEach((el, i) => el.classList.toggle('active', i === index));
+      previewContent.innerHTML = '';
+      const big = document.createElement('img');
+      big.src = img.src;
+      big.alt = img.alt;
+      const title = document.createElement('h4');
+      title.textContent = img.dataset.title;
+      const alt = document.createElement('p');
+      alt.textContent = 'Alt text: ' + img.alt;
+      const num = document.createElement('p');
+      num.textContent = `Image ${index + 1} of ${galleryImages.length}`;
+      previewContent.append(big, title, alt, num);
+    }
+
+    // Marks an image as the persistent selected image.
+    function selectImage(index) {
+      selectedIndex = index;
+      galleryImages.forEach((el, i) => el.classList.toggle('selected', i === index));
+      showPreview(index);
+    }
+
+    // Moves forward/backward through the gallery (wraps around).
+    function stepGallery(direction) {
+      const start = activeIndex === -1 ? (direction > 0 ? -1 : 0) : activeIndex;
+      const next = (start + direction + galleryImages.length) % galleryImages.length;
+      showPreview(next);
+      galleryImages[next].focus();
+    }
+
+    // Returns the preview panel to its instructional message.
+    function resetGallery() {
+      activeIndex = -1;
+      selectedIndex = -1;
+      galleryImages.forEach(el => el.classList.remove('active', 'selected'));
+      previewContent.innerHTML = INSTRUCTION_HTML;
+    }
+
+    // ---------- Event listeners ----------
+    form.addEventListener('submit', (event) => { event.preventDefault(); displayMessage(); }); // Enter key also submits
+    clearBtn.addEventListener('click', clearAll);
+    messageInput.addEventListener('input', updateCounter);
+    increaseBtn.addEventListener('click', () => changeFontSize(STEP));
+    decreaseBtn.addEventListener('click', () => changeFontSize(-STEP));
+    resetStyleBtn.addEventListener('click', resetStyle);
+    bgRadios.forEach(r => r.addEventListener('change', () => {
+      state.bg = r.value; setStatus(''); applyStyles(); checkContrastWarning(); saveState();
+    }));
+    fontRadios.forEach(r => r.addEventListener('change', () => {
+      state.font = r.value; setStatus(''); applyStyles(); checkContrastWarning(); saveState();
+    }));
+    boldToggle.addEventListener('change', () => { state.bold = boldToggle.checked; applyStyles(); saveState(); });
+    italicToggle.addEventListener('change', () => { state.italic = italicToggle.checked; applyStyles(); saveState(); });
+    fontFamilySelect.addEventListener('change', () => { state.family = fontFamilySelect.value; applyStyles(); saveState(); });
+
+    galleryImages.forEach((img, index) => {
+      img.addEventListener('mouseover', () => showPreview(index));
+      img.addEventListener('focus', () => showPreview(index));
+      img.addEventListener('click', () => selectImage(index));
+      img.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectImage(index); }
+      });
+    });
+    prevBtn.addEventListener('click', () => stepGallery(-1));
+    nextBtn.addEventListener('click', () => stepGallery(1));
+    resetGalleryBtn.addEventListener('click', resetGallery);
+
+    // ---------- Init ----------
+    applyStyles();
+    loadState();
+    applyStyles();
+  </script>
+</body>
+</html>
